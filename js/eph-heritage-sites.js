@@ -657,7 +657,7 @@ function generateRecordDetails(qid) {
   if (record.articleTitle) {
     articleHtml = '<div class="article main-text loading"><div class="loader"></div></div>';
   } else {
-    articleHtml = '<div class="article main-text nodata"><p>Situs ini belum memiliki artikel Wikipedia berbahasa Indonesia.</p></div>';
+    articleHtml = '<div class="article main-text nodata"><p>Masjid ini belum memiliki artikel di Wikipedia.</p></div>';
   }
   // ---------------------------------
 
@@ -806,16 +806,18 @@ function renderHistoricalImagesInPanel(qid) {
   
   // Mesin pembuat blok HTML
   function buildImageBlock(imgObj) {
-    // KUNCI PERUBAHAN: Memasang border-top langsung di div pembungkus.
-    // padding-top: 20px diberikan agar ada jarak nafas antara garis dan foto.
     let block = '<div class="arsip-block" style="overflow: hidden;">';
     
     // Cetak fotonya terlebih dahulu
     block += generateFigure(imgObj.file);
     
-    // Cetak teks keterangannya di bawah foto (jika ada)
-    if (imgObj.caption) {
+    // Cetak teks keterangannya di bawah foto
+    // Kita gunakan .trim() untuk memastikan teksnya benar-benar ada, bukan sekadar spasi kosong
+    if (imgObj.caption && imgObj.caption.trim() !== '') {
       block += `<div class="article main-text"><p>${imgObj.caption}</p></div>`;
+    } else {
+      // Jika keterangan kosong, tampilkan pesan peringatan
+      block += `<div class="article main-text nodata"><p>Belum ada keterangan foto di Wikidata</p></div>`;
     }
     
     // Tutup bungkus div
@@ -838,8 +840,13 @@ function renderHistoricalImagesInPanel(qid) {
 
   // Finalisasi penempelan ke layar
   if (html !== '') {
-    // KUNCI PERUBAHAN: H2 "Arsip & Foto Lingkungan" sudah dihapus
-container.innerHTML = '<h2 style="margin-bottom:15px;">Galeri</h2>' + html;
+    // 3. Buat tautan sunting untuk Galeri
+    let wikiUrlUtama = `https://www.wikidata.org/wiki/${qid}`;
+    let tautanSuntingGaleri = `<a href="${wikiUrlUtama}" target="_blank" class="sunting-link" title="Sunting data galeri di Wikidata" aria-label="Sunting data galeri di Wikidata"></a>`;
+    
+    // 4. Masukkan tautan sunting tersebut ke dalam tag <h2>
+    container.innerHTML = `<h2 style="margin-bottom:15px;">Galeri ${tautanSuntingGaleri}</h2>` + html;
+    
     container.classList.remove('loading');
   } else {
     container.innerHTML = '';
