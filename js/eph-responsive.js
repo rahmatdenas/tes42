@@ -42,11 +42,25 @@
       : 'Tarik naik untuk lihat daftar';
   }
 
-  window.setMobilePanelExpanded = function(expand, animate) {
+ window.setMobilePanelExpanded = function(expand, animate) {
     if (!panel || !isMobile()) return;
-    if (animate !== false) panel.classList.remove('eph-dragging');
+    
+    // 1. BEKUKAN atau CAIRKAN animasi sesuai perintah
+    if (animate === false) {
+      panel.classList.add('eph-dragging'); 
+    } else {
+      panel.classList.remove('eph-dragging'); 
+    }
+    
+    // 2. Terapkan perubahan posisi
     applyTransform(expand ? 0 : collapsedTranslate());
     updateLabel(expand);
+    
+    // 3. JIKA SEDANG DIBEKUKAN, paksa browser snap instan lalu cairkan lagi
+    if (animate === false) {
+      void panel.offsetWidth; // Memicu reflow paksa pada browser
+      panel.classList.remove('eph-dragging'); // Kembalikan ke state siap interaksi
+    }
   };
 
   function getScrollableParent(node, root) {
