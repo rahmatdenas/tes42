@@ -2,59 +2,128 @@
 
 const BASE_TITLE = 'WikiSurau';
 
-const SPARQL_QUERY_0 =
-`SELECT DISTINCT ?siteQid ?siteLabel ?provinsiQid ?provinsiLabel ?p131LokasiLabel ?tahunBerdiriMentah ?tahunPresisi
-WHERE {
-  # === LUBANG DINAMIS UNTUK WILAYAH ===
-  <PLACEHOLDER_WILAYAH>
-  
-  VALUES ?jenis { <PLACEHOLDER_JENIS> }
-  
-  ?site wdt:P31 ?jenis ;
-        wdt:P131+ ?provinsi .
-  
-  OPTIONAL { ?site wdt:P131 ?p131Lokasi . }
-      
-  OPTIONAL { 
-    ?site p:P571 ?inceptionStmt .
-    ?inceptionStmt psv:P571 ?inceptionNode .
-    ?inceptionNode wikibase:timeValue ?tahunBerdiriMentah ;
-                   wikibase:timePrecision ?tahunPresisi .
-  }
-  
-  BIND(SUBSTR(STR(?site), 32) AS ?siteQid) .
-  BIND(SUBSTR(STR(?provinsi), 32) AS ?provinsiQid) .
+// ==========================================
+// KAMUS KUERI 0 (MENARIK DATA DAN WILAYAH)
+// ==========================================
+const KUMPULAN_KUERI_0 = {
+  // 1. Kategori General (Bangunan fisik, menggunakan P131+)
+  'general': `SELECT DISTINCT ?siteQid ?siteLabel ?provinsiQid ?provinsiLabel ?p131LokasiLabel ?tahunBerdiriMentah ?tahunPresisi
+  WHERE {
+    <PLACEHOLDER_WILAYAH>
+    VALUES ?jenis { <PLACEHOLDER_JENIS> }
+    
+    ?site wdt:P31 ?jenis ;
+          wdt:P131+ ?provinsi .
+    
+    OPTIONAL { ?site wdt:P131 ?p131Lokasi . }
+        
+    OPTIONAL { 
+      ?site p:P571 ?inceptionStmt .
+      ?inceptionStmt psv:P571 ?inceptionNode .
+      ?inceptionNode wikibase:timeValue ?tahunBerdiriMentah ;
+                     wikibase:timePrecision ?tahunPresisi .
+    }
+    
+    BIND(SUBSTR(STR(?site), 32) AS ?siteQid) .
+    BIND(SUBSTR(STR(?provinsi), 32) AS ?provinsiQid) .
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "id". }
+  }`,
 
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "id". }
-}`;
+  // 2. Kategori Pers (Surat kabar/Majalah, menggunakan P159 -> P131+)
+  'pers': `SELECT DISTINCT ?siteQid ?siteLabel ?provinsiQid ?provinsiLabel ?p131LokasiLabel ?tahunBerdiriMentah ?tahunPresisi
+  WHERE {
+    <PLACEHOLDER_WILAYAH>
+    VALUES ?jenis { <PLACEHOLDER_JENIS> }
+    
+    ?site wdt:P31 ?jenis ;
+          wdt:P159 ?kantor .
+    ?kantor wdt:P131+ ?provinsi .
+    
+    OPTIONAL { ?kantor wdt:P131 ?p131Lokasi . }
+        
+    OPTIONAL { 
+      ?site p:P571 ?inceptionStmt .
+      ?inceptionStmt psv:P571 ?inceptionNode .
+      ?inceptionNode wikibase:timeValue ?tahunBerdiriMentah ;
+                     wikibase:timePrecision ?tahunPresisi .
+    }
+    
+    BIND(SUBSTR(STR(?site), 32) AS ?siteQid) .
+    BIND(SUBSTR(STR(?provinsi), 32) AS ?provinsiQid) .
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "id". }
+  }`,
 
-const SPARQL_QUERY_1_TEMPLATE =
-`SELECT DISTINCT ?siteQid ?coord WHERE {
-  VALUES ?site { <PLACEHOLDER_QIDS> }
+  // 3. Kategori Wilayah Administratif (Kabupaten/Kota, menggunakan P131*)
+  'wilayah': `SELECT DISTINCT ?siteQid ?siteLabel ?provinsiQid ?provinsiLabel ?p131LokasiLabel ?tahunBerdiriMentah ?tahunPresisi
+  WHERE {
+    <PLACEHOLDER_WILAYAH>
+    VALUES ?jenis { <PLACEHOLDER_JENIS> }
+    
+    ?site wdt:P31 ?jenis ;
+          wdt:P131* ?provinsi .
+    
+    OPTIONAL { ?site wdt:P131 ?p131Lokasi . }
+        
+    OPTIONAL { 
+      ?site p:P571 ?inceptionStmt .
+      ?inceptionStmt psv:P571 ?inceptionNode .
+      ?inceptionNode wikibase:timeValue ?tahunBerdiriMentah ;
+                     wikibase:timePrecision ?tahunPresisi .
+    }
+    
+    BIND(SUBSTR(STR(?site), 32) AS ?siteQid) .
+    BIND(SUBSTR(STR(?provinsi), 32) AS ?provinsiQid) .
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "id". }
+  }`
+};
 
-  ?site p:P625 ?coordStatement .
-  ?coordStatement ps:P625 ?coord .
-  FILTER NOT EXISTS { ?coordStatement pq:P518 ?x }
-  BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
-}`;
+// ==========================================
+// KAMUS KUERI 1 (MENARIK KOORDINAT)
+// ==========================================
+const KUMPULAN_KUERI_1 = {
+  'general': `SELECT DISTINCT ?siteQid ?coord WHERE {
+    VALUES ?site { <PLACEHOLDER_QIDS> }
+    ?site p:P625 ?coordStatement .
+    ?coordStatement ps:P625 ?coord .
+    FILTER NOT EXISTS { ?coordStatement pq:P518 ?x }
+    BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
+  }`,
+  
+  'pers': `SELECT DISTINCT ?siteQid ?coord WHERE {
+    VALUES ?site { <PLACEHOLDER_QIDS> }
+    ?site wdt:P159 ?kantor .
+    ?kantor p:P625 ?coordStatement .
+    ?coordStatement ps:P625 ?coord .
+    FILTER NOT EXISTS { ?coordStatement pq:P518 ?x }
+    BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
+  }`,
+  
+  'wilayah': `SELECT DISTINCT ?siteQid ?coord WHERE {
+    VALUES ?site { <PLACEHOLDER_QIDS> }
+    ?site p:P625 ?coordStatement .
+    ?coordStatement ps:P625 ?coord .
+    FILTER NOT EXISTS { ?coordStatement pq:P518 ?x }
+    BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
+  }`
+};
 
+// ==========================================
+// KUERI 3 (GAMBAR & ARTIKEL) - Tetap Tunggal karena rumusnya sama untuk semua
+// ==========================================
 const SPARQL_QUERY_3_TEMPLATE =
 `SELECT ?siteQid (SAMPLE(?imgUtama) AS ?image) (SAMPLE(?wikiTitle) AS ?wikipediaUrlTitle) WHERE {
   VALUES ?site { <PLACEHOLDER_QIDS> }
-  
   OPTIONAL {
     ?site p:P18 ?imageStatement .
     ?imageStatement ps:P18 ?imgUtama .
     FILTER NOT EXISTS { ?imageStatement pq:P3831 wd:Q16189205 }
     FILTER NOT EXISTS { ?imageStatement pq:P180 wd:Q192630 }
   }
-  
   OPTIONAL {
     ?wikipedia schema:about ?site ;
                schema:isPartOf <https://id.wikipedia.org/> .
     BIND (SUBSTR(STR(?wikipedia), 31) AS ?wikiTitle) .
   }
-  
   BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
 } GROUP BY ?siteQid`;
 
@@ -124,41 +193,3 @@ function getSparqlQuery6(qid) {
 }
 
 const ABOUT_SPARQL_QUERY = ``;
-
-const SPARQL_QUERY_0_PERS =
-`SELECT DISTINCT ?siteQid ?siteLabel ?provinsiQid ?provinsiLabel ?p131LokasiLabel ?tahunBerdiriMentah ?tahunPresisi
-WHERE {
-  # === LUBANG DINAMIS UNTUK WILAYAH ===
-  <PLACEHOLDER_WILAYAH>
-  
-  VALUES ?jenis { <PLACEHOLDER_JENIS> }
-  
-  ?site wdt:P31 ?jenis ;
-        wdt:P159 ?kantor .
-  ?kantor wdt:P131+ ?provinsi .
-  
-  OPTIONAL { ?kantor wdt:P131 ?p131Lokasi . }
-      
-  OPTIONAL { 
-    ?site p:P571 ?inceptionStmt .
-    ?inceptionStmt psv:P571 ?inceptionNode .
-    ?inceptionNode wikibase:timeValue ?tahunBerdiriMentah ;
-                   wikibase:timePrecision ?tahunPresisi .
-  }
-  
-  BIND(SUBSTR(STR(?site), 32) AS ?siteQid) .
-  BIND(SUBSTR(STR(?provinsi), 32) AS ?provinsiQid) .
-
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "id". }
-}`;
-
-const SPARQL_QUERY_1_PERS_TEMPLATE =
-`SELECT DISTINCT ?siteQid ?coord WHERE {
-  VALUES ?site { <PLACEHOLDER_QIDS> }
-
-  ?site wdt:P159 ?kantor .
-  ?kantor p:P625 ?coordStatement .
-  ?coordStatement ps:P625 ?coord .
-  FILTER NOT EXISTS { ?coordStatement pq:P518 ?x }
-  BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
-}`;
