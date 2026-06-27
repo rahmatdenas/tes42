@@ -37,6 +37,7 @@
   <option value="wd:Q3741">Yogyakarta</option>
 </select>
     <label for="jenis-dropdown" style="font-weight: bold;">Pilih Kategori Bangunan:</label>
+    
     <select id="jenis-dropdown" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc;">      
       <option value="wd:Q3199141 wd:Q3191695">Kabupaten & kota</option>
       <option value="wd:Q5">Tempat lahir tokoh</option>
@@ -51,12 +52,12 @@
       <option value="wd:Q107357104 wd:Q184485">Tari dan pertunjukan</option>
       <option value="wd:Q189819 wd:Q2627975">Ritual dan upacara</option>
       <option value="wd:Q36192">Budaya rakyat</option>
-<option value="wd:Q32815 wd:Q56235676 wd:Q56235673 wd:Q1454820">Masjid</option>
+      <option value="wd:Q32815 wd:Q56235676 wd:Q56235673 wd:Q1454820">Masjid</option>
       <option value="wd:Q137894610 wd:Q35112127 wd:Q4246737 wd:Q19860854 wd:Q109607">Bangunan bersejarah</option>
       <option value="wd:Q16970 wd:Q2977 wd:Q56242215">Gereja & katedral</option>
       <option value="wd:Q5393308 wd:Q2680845">Vihara & kelenteng</option>
       <option value="wd:Q16917">Rumah sakit</option>
-      <option value="wd:Q3918 wd:Q38723">Universitas & kampus (nanti tambahkan </option>
+      <option value="wd:Q3918 wd:Q38723">Universitas & kampus</option>
       <option value="wd:Q7075">Perpustakaan</option>
       <option value="wd:Q11032 wd:Q41298">Media massa</option>
       <option value="wd:Q33506">Museum</option>
@@ -89,15 +90,15 @@
       <option value="wd:Q131681 wd:Q12323">Waduk, bendungan, & embung</option>
       <option value="custom">Ketik Q-ID Sendiri...</option>
     </select>
-
     <label for="jenis-input" style="font-weight: bold; margin-top: 10px;">Parameter SPARQL (Q-ID):</label>
     <input type="text" id="jenis-input" value="wd:Q3199141 wd:Q3191695" readonly style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; background-color: #f5f5f5;">
 
     <button id="btn-mulai" style="margin-top: 20px; padding: 12px; background-color: #333; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">🔍 Mulai Tarik Data</button>
   </section>
 
-  <div id="loading" class="panel-content" data-display="flex">
+  <div id="loading" class="panel-content" data-display="flex" style="flex-direction: column; justify-content: center; align-items: center;">
     <div class="loader"></div>
+    <p id="loading-text" style="margin-top: 15px; font-weight: bold; text-align: center; color: #555;"></p>
   </div>
   <section id="index" class="panel-content" data-display="flex">
 <header>
@@ -137,7 +138,7 @@
   <ol id="index-list"></ol>
 </div>
   </section>
-  <section id="details" class="panel-content" data-display="block"><!-- dummy node --></section>
+  <section id="details" class="panel-content" data-display="block"></section>
   <section id="kontrib" class="panel-content" data-display="block">
     <p>
 Mari berkontribusi mendokumentasikan dan menghimpun sejarah masjid di Sumatera Barat (terutama masjid/surau tua) sebagai sumber pengetahuan 
